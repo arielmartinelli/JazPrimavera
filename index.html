@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Feliz primavera, gordita 🌻</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Canvas de fondo para partículas ambientales (polen, pétalos flotantes) -->
+  <canvas id="ambient-canvas"></canvas>
+
+  <!-- Canvas para la explosión final de girasoles -->
+  <canvas id="celebration-canvas"></canvas>
+
+  <div class="sun-glow"></div>
+
+  <!-- Botón flotante para pausar / activar música (solo icono con tachado) -->
+  <button id="music-toggle" class="music-btn" aria-label="Control de música" title="Música: Flores Amarillas">
+    <svg class="music-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 18V5l11-2v13"></path>
+      <circle cx="6" cy="18" r="3" fill="currentColor"></circle>
+      <circle cx="17" cy="16" r="3" fill="currentColor"></circle>
+      <line class="music-slash" x1="3" y1="3" x2="21" y2="21" stroke="#e62e53" stroke-width="2.5"></line>
+    </svg>
+  </button>
+
+  <!-- Canción directa de Floricienta (audio local sin radio, sin anuncios) -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="flores-amarillas.m4a" type="audio/mp4">
+    <source src="flores-amarillas.mp3" type="audio/mpeg">
+  </audio>
+
+  <main class="app-container">
+    <!-- Encabezado simple y sincero -->
+    <header class="header">
+      <h1 id="main-title" class="title">
+        Feliz primavera, gordita
+      </h1>
+      <p id="sub-title" class="subtitle">
+        Planta la semilla del amor.
+      </p>
+    </header>
+
+    <!-- Escenario 3D interactivo con la maceta y la planta perfectamente integradas -->
+    <div class="scene-wrapper" id="scene-wrapper">
+      <div class="stage-3d" id="stage-3d">
+
+        <!-- Destellos y auras -->
+        <div class="growth-aura" id="growth-aura"></div>
+        <div class="water-shower" id="water-shower"></div>
+        <div class="heart-container" id="heart-container"></div>
+
+        <!-- Semilla flotante (antes de plantar) -->
+        <div class="seed-element" id="seed">
+          <div class="seed-body"></div>
+          <div class="seed-glow"></div>
+        </div>
+
+        <!-- Contenedor unificado de Maceta y Planta -->
+        <div class="pot-plant-assembly">
+
+          <!-- Planta SVG integrada: sale directamente desde el centro de la tierra -->
+          <div class="plant-container" id="plant-container">
+            <svg class="plant-svg" viewBox="0 0 240 400" id="plant-svg">
+              <defs>
+                <linearGradient id="stemGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#3b7d2f" />
+                  <stop offset="50%" stop-color="#58b23f" />
+                  <stop offset="100%" stop-color="#326c27" />
+                </linearGradient>
+                <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#6bc54f" />
+                  <stop offset="100%" stop-color="#2e6b23" />
+                </linearGradient>
+                <linearGradient id="petalGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ffe243" />
+                  <stop offset="60%" stop-color="#f5a623" />
+                  <stop offset="100%" stop-color="#e07b00" />
+                </linearGradient>
+                <linearGradient id="petalGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#fff585" />
+                  <stop offset="70%" stop-color="#fdbb2d" />
+                  <stop offset="100%" stop-color="#e57a1e" />
+                </linearGradient>
+                <radialGradient id="centerGrad" cx="45%" cy="45%" r="55%">
+                  <stop offset="0%" stop-color="#4a2511" />
+                  <stop offset="65%" stop-color="#331707" />
+                  <stop offset="100%" stop-color="#1f0c03" />
+                </radialGradient>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+
+              <!-- Tallo parte 1 (Primer brote que nace de la tierra en y=395) -->
+              <path id="stem-1" class="plant-part stem-segment" 
+                    d="M 120 395 Q 118 355 120 310" 
+                    stroke="url(#stemGrad)" stroke-width="7.5" stroke-linecap="round" fill="none" />
+
+              <!-- Hoja 1 (primer brote izquierdo) -->
+              <g id="leaf-1" class="plant-part leaf-group leaf-left">
+                <path d="M 120 325 Q 92 320 78 335 Q 100 350 120 330" fill="url(#leafGrad)" />
+                <path d="M 120 325 Q 98 330 80 335" stroke="#7be35c" stroke-width="1.2" fill="none" />
+              </g>
+
+              <!-- Hoja 2 (primer brote derecho) -->
+              <g id="leaf-2" class="plant-part leaf-group leaf-right">
+                <path d="M 120 320 Q 148 315 162 328 Q 142 344 120 325" fill="url(#leafGrad)" />
+                <path d="M 120 320 Q 142 325 160 328" stroke="#7be35c" stroke-width="1.2" fill="none" />
+              </g>
+
+              <!-- Tallo parte 2 (Crecimiento medio) -->
+              <path id="stem-2" class="plant-part stem-segment" 
+                    d="M 120 310 Q 123 260 119 210" 
+                    stroke="url(#stemGrad)" stroke-width="7" stroke-linecap="round" fill="none" />
+
+              <!-- Hoja 3 (media izquierda) -->
+              <g id="leaf-3" class="plant-part leaf-group leaf-left">
+                <path d="M 120 230 Q 75 215 55 238 Q 88 262 120 238" fill="url(#leafGrad)" />
+                <path d="M 120 230 Q 88 236 58 238" stroke="#7be35c" stroke-width="1.4" fill="none" />
+              </g>
+
+              <!-- Hoja 4 (media derecha) -->
+              <g id="leaf-4" class="plant-part leaf-group leaf-right">
+                <path d="M 120 220 Q 165 205 185 224 Q 152 250 120 228" fill="url(#leafGrad)" />
+                <path d="M 120 220 Q 152 224 183 224" stroke="#7be35c" stroke-width="1.4" fill="none" />
+              </g>
+
+              <!-- Tallo parte 3 (Crecimiento superior) -->
+              <path id="stem-3" class="plant-part stem-segment" 
+                    d="M 119 210 Q 115 155 120 110" 
+                    stroke="url(#stemGrad)" stroke-width="6.5" stroke-linecap="round" fill="none" />
+
+              <!-- Hojas superiores -->
+              <g id="leaf-5" class="plant-part leaf-group leaf-left">
+                <path d="M 119 135 Q 90 120 76 135 Q 100 150 119 140" fill="url(#leafGrad)" />
+              </g>
+              <g id="leaf-6" class="plant-part leaf-group leaf-right">
+                <path d="M 120 130 Q 150 115 164 130 Q 140 145 120 135" fill="url(#leafGrad)" />
+              </g>
+
+              <!-- Capullo floral -->
+              <g id="flower-bud" class="plant-part bud-group">
+                <circle cx="120" cy="106" r="16" fill="#3d7e2e" />
+                <path d="M 112 115 C 108 95, 132 95, 128 115 Z" fill="#589e3f" />
+                <path d="M 116 112 C 114 96, 126 96, 124 112 Z" fill="#f5b025" />
+              </g>
+
+              <!-- Flor de Girasol -->
+              <g id="sunflower-head" class="plant-part sunflower-group">
+                <circle cx="120" cy="100" r="75" fill="rgba(255, 215, 0, 0.22)" filter="url(#glow)" class="bloom-pulse" />
+                <g id="petals-back" class="petals-layer"></g>
+                <g id="petals-front" class="petals-layer"></g>
+                <circle cx="120" cy="100" r="28" fill="url(#centerGrad)" stroke="#573016" stroke-width="2.5" class="sunflower-disk" />
+                <g id="disk-pattern"></g>
+                <!-- Detalles del centro -->
+                <circle cx="111" cy="96" r="2" fill="#f0a500" opacity="0.7" />
+                <circle cx="129" cy="96" r="2" fill="#f0a500" opacity="0.7" />
+                <path d="M 115 104 Q 120 108 125 104" stroke="#f0a500" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7" />
+              </g>
+            </svg>
+          </div>
+
+          <!-- Maceta limpia sin textos -->
+          <div class="pot-3d">
+            <div class="pot-rim">
+              <div class="pot-soil">
+                <div class="soil-texture"></div>
+                <div class="soil-hole" id="soil-hole"></div>
+              </div>
+            </div>
+            <div class="pot-body">
+              <div class="pot-shadow-inner"></div>
+              <div class="pot-highlight"></div>
+            </div>
+            <div class="pot-base-shadow"></div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Barra de progreso simple -->
+    <div class="progress-bar-container">
+      <div class="progress-track">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <span class="progress-text" id="progress-text">Paso 1 de 6</span>
+    </div>
+
+    <!-- Botón de acción directo y limpio -->
+    <footer class="action-footer">
+      <button class="primary-btn" id="action-btn">
+        <span class="btn-text" id="btn-text">Plantar</span>
+      </button>
+
+      <p class="hint-text" id="hint-text">
+        Toca para plantar la semilla en la tierra.
+      </p>
+    </footer>
+  </main>
+
+  <!-- Modal final con dedicatoria sincera -->
+  <div class="final-modal-backdrop" id="final-modal">
+    <div class="final-card">
+      <h2 class="final-title">¡Feliz primavera, gordita! 🌻</h2>
+      <p class="final-love-phrase">
+        Te amo con todo mi corazón.
+      </p>
+      <div class="final-actions">
+        <button class="replay-btn" id="replay-btn">
+          <span>Volver a empezar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,768 @@
+/* ==========================================================================
+   ESTILOS GENERALES Y PALETA PRIMAVERAL
+   ========================================================================== */
+:root {
+  --primary-gold: #f5b025;
+  --primary-orange: #f37d1a;
+  --spring-green: #48a832;
+  --cream-white: #fffdf7;
+  --bg-gradient: linear-gradient(180deg, #cdeeff 0%, #e9f7ea 45%, #fff8de 100%);
+  --card-bg: rgba(255, 255, 255, 0.92);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-gradient);
+  color: #2c3e50;
+  position: relative;
+}
+
+/* Canvas de fondo y de explosión */
+#ambient-canvas, #celebration-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+#ambient-canvas { z-index: 1; }
+#celebration-canvas { z-index: 998; }
+
+/* Reproductor oculto para YouTube */
+.hidden-player {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Resplandor solar suave */
+.sun-glow {
+  position: fixed;
+  top: -90px;
+  right: -90px;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(255, 235, 133, 0.75) 0%, rgba(255, 215, 0, 0.25) 45%, rgba(255, 255, 255, 0) 70%);
+  border-radius: 50%;
+  filter: blur(25px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Botón flotante para música (icono compacto y redondo) */
+.music-btn {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #b06214;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+  padding: 0;
+}
+
+.music-btn:active {
+  transform: scale(0.9);
+}
+
+.music-svg {
+  width: 19px;
+  height: 19px;
+  overflow: visible;
+  transition: transform 0.25s ease;
+}
+
+/* Línea de tachado cuando la música está en pausa */
+.music-slash {
+  opacity: 1;
+  transform: scale(1);
+  transform-origin: center;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* Cuando está sonando: desaparece el tachado y la nota se mueve al ritmo */
+.music-btn.playing {
+  color: #d97706;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(245, 176, 37, 0.35);
+}
+
+.music-btn.playing .music-slash {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.music-btn.playing .music-svg {
+  animation: musicWave 1.8s ease-in-out infinite;
+}
+
+@keyframes musicWave {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-8deg); }
+  75% { transform: scale(1.1) rotate(8deg); }
+}
+
+/* Contenedor principal */
+.app-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 460px;
+  height: 100%;
+  height: 100dvh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 20px 30px 20px;
+}
+
+/* ==========================================================================
+   HEADER
+   ========================================================================== */
+.header {
+  text-align: center;
+  margin-top: 15px;
+  padding: 0 10px;
+}
+
+.title {
+  font-family: 'Caveat', cursive;
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #3b2c1f;
+  transition: opacity 0.3s ease;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #5c6b7e;
+  margin-top: 4px;
+  font-weight: 400;
+  min-height: 24px;
+  transition: opacity 0.3s ease;
+}
+
+/* ==========================================================================
+   ESCENARIO 3D INTERACTIVO
+   ========================================================================== */
+.scene-wrapper {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+  max-height: 500px;
+}
+
+.stage-3d {
+  position: relative;
+  width: 280px;
+  height: 420px;
+  transform-style: preserve-3d;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.4, 1);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Ensamble de Maceta y Planta */
+.pot-plant-assembly {
+  position: relative;
+  width: 240px;
+  height: 400px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Aura de crecimiento */
+.growth-aura {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(255, 224, 71, 0.35) 0%, rgba(255, 200, 0, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.growth-aura.active {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+/* ==========================================================================
+   SEMILLA
+   ========================================================================== */
+.seed-element {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 25;
+  width: 32px;
+  height: 44px;
+  cursor: pointer;
+  transition: all 0.9s cubic-bezier(0.34, 1.3, 0.64, 1);
+  animation: seedFloat 3s ease-in-out infinite;
+}
+
+@keyframes seedFloat {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
+  50% { transform: translate(-50%, -50%) translateY(-10px); }
+}
+
+.seed-body {
+  width: 24px;
+  height: 36px;
+  margin: 0 auto;
+  background: radial-gradient(circle at 35% 30%, #a67c52 0%, #6b4423 70%, #442a12 100%);
+  border-radius: 50% 50% 50% 50% / 70% 70% 30% 30%;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+  position: relative;
+}
+
+.seed-body::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 5px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: rotate(-20deg);
+}
+
+.seed-glow {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  background: radial-gradient(circle, rgba(255, 220, 100, 0.5) 0%, rgba(255, 200, 0, 0) 70%);
+  border-radius: 50%;
+}
+
+.seed-element.planting {
+  animation: none;
+  top: 80%;
+  transform: translate(-50%, 0) scale(0.3) rotate(360deg);
+  opacity: 0;
+  transition: top 1.1s cubic-bezier(0.5, 0, 0.75, 0), transform 1.1s ease-in, opacity 0.5s ease 0.7s;
+}
+
+.seed-element.hidden {
+  display: none;
+}
+
+/* ==========================================================================
+   MACETA MINIMALISTA (SIN TEXTO)
+   ========================================================================== */
+.pot-3d {
+  position: relative;
+  width: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  filter: drop-shadow(0 15px 22px rgba(80, 40, 15, 0.22));
+}
+
+.pot-rim {
+  width: 170px;
+  height: 38px;
+  background: linear-gradient(90deg, #c75e2f 0%, #e88656 40%, #ff9f73 50%, #c75e2f 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15), inset 0 2px 3px rgba(255,255,255,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.pot-soil {
+  width: 144px;
+  height: 26px;
+  background: radial-gradient(ellipse at center, #482a15 0%, #2f180a 75%, #1d0e04 100%);
+  border-radius: 50%;
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.65);
+  position: relative;
+  overflow: hidden;
+}
+
+.soil-texture {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(rgba(0,0,0,0.3) 15%, transparent 16%),
+                    radial-gradient(rgba(255,255,255,0.08) 15%, transparent 16%);
+  background-size: 8px 8px;
+  background-position: 0 0, 4px 4px;
+  opacity: 0.6;
+}
+
+.soil-hole {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 22px;
+  height: 11px;
+  background: #140802;
+  border-radius: 50%;
+  transition: transform 0.4s ease;
+}
+
+.soil-hole.open {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.pot-body {
+  width: 136px;
+  height: 98px;
+  margin-top: -16px;
+  background: linear-gradient(90deg, #ab4b1e 0%, #d86f3b 35%, #eb8450 50%, #ab4b1e 100%);
+  clip-path: polygon(5% 0%, 95% 0%, 80% 100%, 20% 100%);
+  position: relative;
+}
+
+.pot-base-shadow {
+  position: absolute;
+  bottom: -14px;
+  width: 140px;
+  height: 22px;
+  background: radial-gradient(ellipse at center, rgba(60, 30, 10, 0.35) 0%, rgba(0,0,0,0) 70%);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   PLANTA (ANCLADA DENTRO DE LA TIERRA DE LA MACETA)
+   ========================================================================== */
+.plant-container {
+  position: absolute;
+  bottom: 86px; /* Ajuste milimétrico para que la base del tallo brote dentro de la tierra */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  height: 400px;
+  z-index: 15; /* Emerge visible desde el orificio central de la tierra */
+  pointer-events: none;
+}
+
+.plant-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.plant-part {
+  transition: all 0.8s cubic-bezier(0.34, 1.3, 0.64, 1);
+  transform-origin: 120px 395px;
+}
+
+/* Tallo */
+.stem-segment {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  transition: stroke-dashoffset 1.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stem-segment.visible {
+  stroke-dashoffset: 0;
+}
+
+/* Hojas */
+.leaf-group {
+  opacity: 0;
+  transform: scale(0);
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
+}
+
+.leaf-left { transform-origin: 120px 325px; }
+#leaf-3 { transform-origin: 120px 230px; }
+#leaf-5 { transform-origin: 119px 135px; }
+
+.leaf-right { transform-origin: 120px 320px; }
+#leaf-4 { transform-origin: 120px 220px; }
+#leaf-6 { transform-origin: 120px 130px; }
+
+.leaf-group.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Capullo */
+.bud-group {
+  opacity: 0;
+  transform: scale(0) translate(0, 10px);
+  transform-origin: 120px 106px;
+  transition: all 0.7s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.bud-group.visible {
+  opacity: 1;
+  transform: scale(1) translate(0, 0);
+}
+
+.bud-group.hidden {
+  opacity: 0;
+  transform: scale(0);
+}
+
+/* Girasol y pétalos */
+.sunflower-group {
+  opacity: 0;
+  transform: scale(0) rotate(-35deg);
+  transform-origin: 120px 100px;
+  transition: all 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.sunflower-group.visible {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  animation: gentleFlowerSway 4s ease-in-out infinite alternate;
+}
+
+@keyframes gentleFlowerSway {
+  0% { transform: scale(1) rotate(-3deg); }
+  100% { transform: scale(1.02) rotate(4deg); }
+}
+
+.sunflower-petal {
+  opacity: 0;
+  transform: scale(0);
+  transform-origin: 120px 100px;
+  transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease;
+}
+
+.sunflower-group.visible .sunflower-petal {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.bloom-pulse {
+  animation: bloomHalo 3s ease-in-out infinite alternate;
+}
+
+@keyframes bloomHalo {
+  0% { transform: scale(0.95); opacity: 0.25; }
+  100% { transform: scale(1.15); opacity: 0.65; }
+}
+
+.plant-container.swaying {
+  animation: gentleBreeze 5s ease-in-out infinite alternate;
+  transform-origin: 120px 395px;
+}
+
+@keyframes gentleBreeze {
+  0% { transform: translateX(-50%) rotate(-1.5deg); }
+  100% { transform: translateX(-50%) rotate(2deg); }
+}
+
+/* ==========================================================================
+   EFECTOS: AGUA Y CORAZONES
+   ========================================================================== */
+.water-shower {
+  position: absolute;
+  top: 35px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 220px;
+  pointer-events: none;
+  z-index: 30;
+}
+
+.water-drop {
+  position: absolute;
+  width: 5px;
+  height: 13px;
+  background: linear-gradient(180deg, rgba(160, 225, 255, 0.9), rgba(50, 160, 255, 0.95));
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  animation: waterFall 0.8s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+}
+
+@keyframes waterFall {
+  0% { transform: translateY(0) scaleY(1); opacity: 1; }
+  85% { transform: translateY(200px) scaleY(1.3); opacity: 0.9; }
+  100% { transform: translateY(210px) scaleY(0.2); opacity: 0; }
+}
+
+.water-splash {
+  position: absolute;
+  bottom: 90px;
+  width: 14px;
+  height: 6px;
+  border: 2px solid #5ab8ff;
+  border-radius: 50%;
+  animation: splashRipple 0.5s ease-out forwards;
+}
+
+@keyframes splashRipple {
+  0% { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.heart-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 35;
+}
+
+.floating-heart {
+  position: absolute;
+  font-size: 22px;
+  animation: floatLove 1.6s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+  filter: drop-shadow(0 0 8px rgba(255, 105, 180, 0.5));
+}
+
+@keyframes floatLove {
+  0% { transform: translateY(0) scale(0.4); opacity: 0; }
+  25% { transform: translateY(-30px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(-150px) scale(1.3); opacity: 0; }
+}
+
+/* ==========================================================================
+   BARRA DE PROGRESO
+   ========================================================================== */
+.progress-bar-container {
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  z-index: 10;
+}
+
+.progress-track {
+  width: 100%;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  width: 16.6%;
+  background: linear-gradient(90deg, #48a832, #f5b025);
+  border-radius: 20px;
+  transition: width 0.6s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+.progress-text {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #7b889b;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   BOTÓN LIMPIO Y MINIMALISTA (SIN SPARKLE ✨)
+   ========================================================================== */
+.action-footer {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 20;
+}
+
+.primary-btn {
+  width: 100%;
+  padding: 16px 24px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #f5a623 0%, #f37121 100%);
+  border: none;
+  border-radius: 40px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(243, 113, 33, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(243, 113, 33, 0.45);
+}
+
+.primary-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 4px 14px rgba(243, 113, 33, 0.35);
+}
+
+.primary-btn.love-state {
+  background: linear-gradient(135deg, #ff5e7e 0%, #e6194b 100%);
+  box-shadow: 0 8px 24px rgba(230, 25, 75, 0.4);
+}
+
+.hint-text {
+  font-size: 0.88rem;
+  color: #6d7b8f;
+  text-align: center;
+}
+
+/* ==========================================================================
+   MODAL FINAL SIMPLE
+   ========================================================================== */
+.final-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(20, 15, 10, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.final-modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.final-card {
+  background: var(--card-bg);
+  border-radius: 26px;
+  padding: 36px 28px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2), 0 0 35px rgba(245, 176, 37, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  transform: translateY(30px) scale(0.92);
+  transition: transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.final-modal-backdrop.active .final-card {
+  transform: translateY(0) scale(1);
+}
+
+.final-title {
+  font-family: 'Caveat', cursive;
+  font-size: 2.7rem;
+  color: #3b2816;
+  line-height: 1.1;
+}
+
+.final-love-phrase {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #e62e53;
+  line-height: 1.3;
+}
+
+.final-actions {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.replay-btn {
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: 35px;
+  border: 1.5px solid #dcdfe5;
+  background: rgba(255, 255, 255, 0.85);
+  color: #4b5668;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.replay-btn:active {
+  transform: scale(0.96);
+  background: #f1f3f7;
+}
+
+/* ==========================================================================
+   AJUSTES RESPONSIVE
+   ========================================================================== */
+@media (max-height: 680px) {
+  .app-container {
+    padding: 12px 16px 18px 16px;
+  }
+  .title {
+    font-size: 2.1rem;
+  }
+  .subtitle {
+    font-size: 0.9rem;
+  }
+  .stage-3d {
+    width: 240px;
+    height: 360px;
+  }
+  .primary-btn {
+    padding: 13px 22px;
+    font-size: 1.15rem;
+  }
+}
