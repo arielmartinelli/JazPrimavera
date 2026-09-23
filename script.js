@@ -378,7 +378,7 @@ function emitAbundantWaterStream() {
     const startX = spoutX + (Math.random() - 0.5) * 8;
     const startY = spoutY + (Math.random() - 0.5) * 4;
     const spreadX = (Math.random() - 0.5) * 28 - 12; // Inclinación natural
-    const fallDuration = 0.38 + Math.random() * 0.12;
+    const fallDuration = 0.65 + Math.random() * 0.18; // Caída más suave y lenta (~0.7s a 0.8s)
 
     drop.style.left = `${startX}px`;
     drop.style.top = `${startY}px`;
@@ -408,7 +408,7 @@ function createSoilRipple(x, y) {
   setTimeout(() => ripple.remove(), 400);
 }
 
-// Comprobación y CRECIMIENTO CONTINUO en tiempo real mientras cae el agua
+// Comprobación y CRECIMIENTO CONTINUO en tiempo real mientras cae el agua (~5.5 segundos)
 function checkWateringCollision() {
   if (!isWaterStepActive) return;
 
@@ -420,7 +420,7 @@ function checkWateringCollision() {
   const isOverPot = (spoutX >= potRect.left - 45 && spoutX <= potRect.right + 45);
 
   if (isOverPot) {
-    waterPourProgress += 1.4; // Aumento continuo y suave
+    waterPourProgress += 0.88; // ~5.5 a 6 segundos continuos para regar por completo
     updateContinuousGrowth(waterPourProgress);
 
     if (waterPourProgress >= 100) {
@@ -523,7 +523,7 @@ function autoWaterAnimation() {
     startCanDroplets();
 
     const autoInterval = setInterval(() => {
-      waterPourProgress += 3.5;
+      waterPourProgress += 1.05; // Riego automático pausado y suave de ~5.5 segundos
       updateContinuousGrowth(waterPourProgress);
 
       if (waterPourProgress >= 100) {

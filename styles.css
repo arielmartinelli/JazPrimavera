@@ -647,7 +647,7 @@ html, body {
   pointer-events: none;
   z-index: 80;
   box-shadow: 0 0 6px rgba(41, 151, 255, 0.45);
-  animation: canDropFallDynamic 0.45s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+  animation: canDropFallDynamic 0.72s cubic-bezier(0.4, 0, 0.6, 1) forwards;
 }
 
 @keyframes canDropFallDynamic {
