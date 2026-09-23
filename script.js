@@ -1,6 +1,6 @@
 /**
  * ==============================================================================
- * FLOR DE PRIMAVERA PARA GORDITA - INTERACCIÓN TOTAL
+ * FLOR DE PRIMAVERA PARA GORDITA - INTERACCIÓN TOTAL Y CRECIMIENTO CONTINUO
  * ==============================================================================
  */
 
@@ -28,9 +28,8 @@ const progressText = document.getElementById('progress-text');
 const musicToggle = document.getElementById('music-toggle');
 const bgMusic = document.getElementById('bg-music');
 
-// Elementos interactivos nuevos
+// Elementos interactivos
 const wateringCan = document.getElementById('watering-can');
-const waterStream = document.getElementById('water-stream');
 const actionMeterContainer = document.getElementById('action-meter-container');
 const actionMeterFill = document.getElementById('action-meter-fill');
 const actionMeterLabel = document.getElementById('action-meter-label');
@@ -88,7 +87,7 @@ document.addEventListener('dblclick', (e) => {
 }, { passive: false });
 
 /* ==============================================================================
-   REPRODUCCIÓN DE LA CANCIÓN "FLORES AMARILLAS" DE FLORICIENTA
+   MÚSICA FLORICIENTA
    ============================================================================== */
 function playMusic() {
   if (bgMusic) {
@@ -127,12 +126,12 @@ function ensureMusicOnFirstInteraction() {
 }
 
 /* ==============================================================================
-   GENERACIÓN PROCEDURAL DE PÉTALOS Y SEMILLAS DEL GIRASOL COMPLETO
+   GENERACIÓN DE PÉTALOS EN 360° (GIRASOL COMPLETO DE 48 PÉTALOS)
    ============================================================================== */
 function buildSunflowerSVG() {
   const cx = 120;
   const cy = 100;
-  const numPetals = 24; // 24 atrás + 24 adelante = 48 pétalos densos y completos
+  const numPetals = 24;
 
   petalsBack.innerHTML = '';
   petalsFront.innerHTML = '';
@@ -186,13 +185,13 @@ function buildSunflowerSVG() {
 }
 
 /* ==============================================================================
-   CONFIGURACIÓN DE PASOS Y TEXTOS
+   TEXTOS Y PASOS
    ============================================================================== */
 const stepsConfig = [
   {
     step: 0,
-    progress: 16.6,
-    progressText: 'Paso 1 de 6',
+    progress: 15,
+    progressText: 'Paso 1 de 5',
     title: 'Feliz primavera, gordita',
     subtitle: 'Planta la semilla del amor.',
     btnText: 'Plantar',
@@ -201,48 +200,38 @@ const stepsConfig = [
   },
   {
     step: 1,
-    progress: 33.3,
-    progressText: 'Paso 2 de 6',
-    title: 'Semilla plantada',
+    progress: 30,
+    progressText: 'Paso 2 de 5',
+    title: 'Riega la plantita',
     subtitle: 'Arrastra la regadera sobre la maceta 💧',
     btnText: 'Regar',
-    hint: 'Mueve la regadera con el dedo o toca el botón para regar.',
+    hint: 'Arrastra la regadera sobre la tierra para que crezca continuamente.',
     isLove: false,
   },
   {
     step: 2,
-    progress: 50,
-    progressText: 'Paso 3 de 6',
-    title: 'Salió un brote',
-    subtitle: 'Vuelve a regar para que el tallo crezca más alto 🚿',
-    btnText: 'Volver a regar',
-    hint: 'Arrastra la regadera sobre la tierra para hidratarla.',
-    isLove: false,
+    progress: 60,
+    progressText: 'Paso 3 de 5',
+    title: 'Dale amor',
+    subtitle: 'Toca la pantalla varias veces para darle cariño 💖',
+    btnText: 'Dar amor',
+    hint: 'Toca en la pantalla para darle amor.',
+    isLove: true,
   },
   {
     step: 3,
-    progress: 66.6,
-    progressText: 'Paso 4 de 6',
-    title: 'Creciendo',
-    subtitle: 'Toca la pantalla varias veces para darle amor 💖',
-    btnText: 'Dar amor',
-    hint: 'Toca en cualquier parte de la pantalla para darle cariño.',
+    progress: 80,
+    progressText: 'Paso 4 de 5',
+    title: 'Casi lista',
+    subtitle: 'Sigue tocando la pantalla para que aparezca el capullo ✨',
+    btnText: 'Volver a dar amor',
+    hint: 'Toca la pantalla para darle más amor.',
     isLove: true,
   },
   {
     step: 4,
-    progress: 83.3,
-    progressText: 'Paso 5 de 6',
-    title: 'Casi lista',
-    subtitle: 'Toca la pantalla para darle los últimos toques de amor ✨',
-    btnText: 'Volver a dar amor',
-    hint: 'Toca la pantalla para que aparezca el capullo.',
-    isLove: true,
-  },
-  {
-    step: 5,
     progress: 92,
-    progressText: 'Paso 6 de 6',
+    progressText: 'Paso 5 de 5',
     title: 'El capullo está listo',
     subtitle: 'Toca "Te amo" para verla florecer 🌻',
     btnText: 'Te amo',
@@ -285,7 +274,7 @@ function triggerAura() {
 }
 
 /* ==============================================================================
-   MECÁNICA 1: REGADERA INTERACTIVA ARRASTRABLE
+   MECÁNICA 1: RIEGO CONTINUO CON ABUNDANTE AGUA HASTA LA MACETA
    ============================================================================== */
 function setupWateringCan() {
   let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
@@ -315,14 +304,12 @@ function setupWateringCan() {
 
   function onPointerMove(e) {
     if (!isDraggingCan) return;
-    const clientX = e.clientX;
-    const clientY = e.clientY;
-    moveCanTo(clientX, clientY);
+    moveCanTo(e.clientX, e.clientY);
   }
 
   function onTouchMove(e) {
     if (!isDraggingCan) return;
-    e.preventDefault(); // Evita scroll
+    e.preventDefault();
     if (e.touches && e.touches[0]) {
       moveCanTo(e.touches[0].clientX, e.touches[0].clientY);
     }
@@ -356,10 +343,11 @@ function setupWateringCan() {
 
 function startCanDroplets() {
   if (canWaterInterval) clearInterval(canWaterInterval);
+  // Emisión rápida para abundante flujo de agua
   canWaterInterval = setInterval(() => {
-    emitWaterDropFromCan();
+    emitAbundantWaterStream();
     checkWateringCollision();
-  }, 70);
+  }, 50);
 }
 
 function stopCanDroplets() {
@@ -369,21 +357,58 @@ function stopCanDroplets() {
   }
 }
 
-function emitWaterDropFromCan() {
+// Chorro abundante de gotas que caen desde la regadera HASTA la tierra de la maceta
+function emitAbundantWaterStream() {
   const canRect = wateringCan.getBoundingClientRect();
-  // El pico vertedor está en la izquierda del SVG (~15% x, ~35% y)
+  const potRect = (potSoil || stage3d).getBoundingClientRect();
+
+  // Coordenadas del pico vertedor
   const spoutX = canRect.left + canRect.width * 0.12;
   const spoutY = canRect.top + canRect.height * 0.32;
 
-  const drop = document.createElement('div');
-  drop.className = 'can-water-drop';
-  drop.style.left = `${spoutX + (Math.random() - 0.5) * 8}px`;
-  drop.style.top = `${spoutY}px`;
-  document.body.appendChild(drop);
+  // Nivel superior de la tierra de la maceta
+  const targetSoilY = potRect.top + potRect.height * 0.45;
+  const distanceY = Math.max(90, targetSoilY - spoutY);
 
-  setTimeout(() => drop.remove(), 520);
+  // Emitir 4 gotas por tick para lograr un chorro de agua abundante y denso
+  for (let i = 0; i < 4; i++) {
+    const drop = document.createElement('div');
+    drop.className = 'can-water-drop';
+
+    const startX = spoutX + (Math.random() - 0.5) * 8;
+    const startY = spoutY + (Math.random() - 0.5) * 4;
+    const spreadX = (Math.random() - 0.5) * 28 - 12; // Inclinación natural
+    const fallDuration = 0.38 + Math.random() * 0.12;
+
+    drop.style.left = `${startX}px`;
+    drop.style.top = `${startY}px`;
+    drop.style.setProperty('--fall-dist', `${distanceY}px`);
+    drop.style.setProperty('--spread-x', `${spreadX}px`);
+    drop.style.animationDuration = `${fallDuration}s`;
+
+    document.body.appendChild(drop);
+
+    // Cuando la gota llega a la tierra de la maceta, produce una onda de salpicadura
+    setTimeout(() => {
+      const impactX = startX + spreadX;
+      if (impactX >= potRect.left - 25 && impactX <= potRect.right + 25) {
+        createSoilRipple(impactX, targetSoilY);
+      }
+      drop.remove();
+    }, fallDuration * 1000);
+  }
 }
 
+function createSoilRipple(x, y) {
+  const ripple = document.createElement('div');
+  ripple.className = 'soil-splash-ripple';
+  ripple.style.left = `${x}px`;
+  ripple.style.top = `${y}px`;
+  document.body.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 400);
+}
+
+// Comprobación y CRECIMIENTO CONTINUO en tiempo real mientras cae el agua
 function checkWateringCollision() {
   if (!isWaterStepActive) return;
 
@@ -391,48 +416,64 @@ function checkWateringCollision() {
   const potRect = (potSoil || stage3d).getBoundingClientRect();
   const spoutX = canRect.left + canRect.width * 0.15;
 
-  // Si el agua cae sobre la zona de la maceta
-  const isOverPot = (spoutX >= potRect.left - 40 && spoutX <= potRect.right + 40);
+  // Si el chorro cae en el área de la maceta
+  const isOverPot = (spoutX >= potRect.left - 45 && spoutX <= potRect.right + 45);
 
   if (isOverPot) {
-    waterPourProgress += 1.8;
-    updateWaterMeter();
-
-    // Pequeño splash en la tierra
-    if (Math.random() < 0.35) {
-      triggerSingleSoilSplash();
-    }
+    waterPourProgress += 1.4; // Aumento continuo y suave
+    updateContinuousGrowth(waterPourProgress);
 
     if (waterPourProgress >= 100) {
-      finishWateringStep();
+      completeContinuousWatering();
     }
   }
 }
 
-function triggerSingleSoilSplash() {
-  const splash = document.createElement('div');
-  splash.className = 'water-splash';
-  splash.style.left = `${35 + Math.random() * 30}%`;
-  waterShower.appendChild(splash);
-  setTimeout(() => splash.remove(), 450);
-}
+// Crecimiento progresivo y continuo de la plantita mientras cae el agua
+function updateContinuousGrowth(progress) {
+  const pct = Math.min(100, Math.round(progress));
+  actionMeterFill.style.width = `${pct}%`;
+  actionMeterLabel.textContent = `💧 Regando... ${pct}%`;
 
-function updateWaterMeter() {
-  actionMeterFill.style.width = `${Math.min(100, waterPourProgress)}%`;
-  actionMeterLabel.textContent = `💧 Regando... ${Math.round(Math.min(100, waterPourProgress))}%`;
+  // 1. A partir del 15% de agua: asoma el primer tallito verde
+  if (pct >= 15 && !stem1.classList.contains('visible')) {
+    stem1.classList.add('visible');
+    soilHole.classList.remove('open');
+  }
+
+  // 2. A partir del 30% de agua: se abren las dos primeras hojitas del brote
+  if (pct >= 30 && !leaf1.classList.contains('visible')) {
+    leaf1.classList.add('visible');
+    leaf2.classList.add('visible');
+    subTitle.textContent = '¡Mira cómo asoma el brote verde! Sigue regando 💧';
+  }
+
+  // 3. A partir del 55% de agua: el tallo se estira hacia arriba continuamente
+  if (pct >= 55 && !stem2.classList.contains('visible')) {
+    stem2.classList.add('visible');
+    subTitle.textContent = '¡El tallo crece fuerte con el agua! 🌿';
+  }
+
+  // 4. A partir del 75% de agua: se despliegan las hojas medias
+  if (pct >= 75 && !leaf3.classList.contains('visible')) {
+    leaf3.classList.add('visible');
+    leaf4.classList.add('visible');
+  }
+
+  // Barra de progreso general también avanza suavemente
+  const generalProgress = 15 + (pct / 100) * 35; // de 15% a 50%
+  progressBar.style.width = `${generalProgress}%`;
 }
 
 function showWateringCan() {
   isWaterStepActive = true;
   waterPourProgress = 0;
 
-  // Posicionar la regadera arriba a la derecha de la maceta
   wateringCan.classList.remove('hidden');
   wateringCan.style.top = `${window.innerHeight * 0.28}px`;
-  wateringCan.style.left = `${window.innerWidth * 0.62}px`;
+  wateringCan.style.left = `${window.innerWidth * 0.60}px`;
   wateringCan.style.right = 'auto';
 
-  // Mostrar el medidor de agua
   actionMeterContainer.classList.remove('love-theme');
   actionMeterContainer.classList.add('active');
   actionMeterFill.style.width = '0%';
@@ -448,43 +489,32 @@ function hideWateringCan() {
   actionMeterContainer.classList.remove('active');
 }
 
-function finishWateringStep() {
-  hideWateringCan();
+// Al completar el 100% de agua: transición suave a la etapa de dar amor
+function completeContinuousWatering() {
+  isWaterStepActive = false;
+  stopCanDroplets();
+  wateringCan.classList.remove('pouring');
+
   triggerAura();
 
-  if (currentStep === 1) {
-    // Brote pequeño
-    stem1.classList.add('visible');
-    setTimeout(() => {
-      leaf1.classList.add('visible');
-      leaf2.classList.add('visible');
-      currentStep = 2;
-      updateUI(currentStep);
-      showWateringCan(); // Prepara la regadera para el paso "Volver a regar"
-    }, 450);
-  } else if (currentStep === 2) {
-    // Tallo medio
-    stem2.classList.add('visible');
-    setTimeout(() => {
-      leaf3.classList.add('visible');
-      leaf4.classList.add('visible');
-      currentStep = 3;
-      updateUI(currentStep);
-      setupLoveStep(); // Prepara los toques de amor
-    }, 450);
-  }
+  setTimeout(() => {
+    hideWateringCan();
+    currentStep = 2; // Avanza a "Dar amor"
+    updateUI(currentStep);
+    setupLoveStep(); // Prepara los toques de amor
+  }, 600);
 }
 
-// Si el usuario toca el botón "Regar" en lugar de arrastrar, la regadera riega automáticamente
+// Si se presiona el botón "Regar", se ejecuta animación de riego continuo hasta completar
 function autoWaterAnimation() {
   if (!isWaterStepActive) return;
   actionBtn.disabled = true;
 
   const potRect = stage3d.getBoundingClientRect();
-  const targetX = potRect.left + potRect.width * 0.42;
-  const targetY = potRect.top + potRect.height * 0.15;
+  const targetX = potRect.left + potRect.width * 0.40;
+  const targetY = potRect.top + potRect.height * 0.12;
 
-  wateringCan.style.transition = 'left 0.8s ease, top 0.8s ease, transform 0.4s ease';
+  wateringCan.style.transition = 'left 0.7s ease, top 0.7s ease, transform 0.3s ease';
   wateringCan.style.left = `${targetX}px`;
   wateringCan.style.top = `${targetY}px`;
 
@@ -493,21 +523,20 @@ function autoWaterAnimation() {
     startCanDroplets();
 
     const autoInterval = setInterval(() => {
-      waterPourProgress += 4.5;
-      updateWaterMeter();
-      triggerSingleSoilSplash();
+      waterPourProgress += 3.5;
+      updateContinuousGrowth(waterPourProgress);
 
       if (waterPourProgress >= 100) {
         clearInterval(autoInterval);
         wateringCan.classList.remove('pouring');
-        finishWateringStep();
+        completeContinuousWatering();
       }
-    }, 80);
-  }, 850);
+    }, 60);
+  }, 750);
 }
 
 /* ==============================================================================
-   MECÁNICA 2: DAR AMOR CON VARIOS CLICS / TOQUES EN LA PANTALLA
+   MECÁNICA 2: DAR AMOR TOCANDO LA PANTALLA
    ============================================================================== */
 function setupLoveStep() {
   isLoveStepActive = true;
@@ -549,8 +578,8 @@ function triggerTapHearts(x, y) {
     heart.style.left = `${x}px`;
     heart.style.top = `${y}px`;
 
-    const dx = (Math.random() - 0.5) * 80;
-    const rot = (Math.random() - 0.5) * 40;
+    const dx = (Math.random() - 0.5) * 85;
+    const rot = (Math.random() - 0.5) * 45;
     heart.style.setProperty('--dx', `${dx}px`);
     heart.style.setProperty('--rot', `${rot}deg`);
 
@@ -564,25 +593,24 @@ function finishLoveStep() {
   loveTapZone.classList.remove('active');
   actionMeterContainer.classList.remove('active');
 
-  if (currentStep === 3) {
+  if (currentStep === 2) {
     // Tallo superior y hojas altas
     stem3.classList.add('visible');
     setTimeout(() => {
       leaf5.classList.add('visible');
       leaf6.classList.add('visible');
-      currentStep = 4;
+      currentStep = 3;
       updateUI(currentStep);
-      setupLoveStep(); // Prepara el segundo paso de toques de amor
+      setupLoveStep(); // Prepara el segundo ciclo de amor para el capullo
     }, 450);
-  } else if (currentStep === 4) {
-    // Aparece el capullo maduro
+  } else if (currentStep === 3) {
+    // Aparece el capullo floral maduro
     flowerBud.classList.add('visible');
-    currentStep = 5;
+    currentStep = 4;
     updateUI(currentStep);
   }
 }
 
-// Zona de toques de amor
 loveTapZone.addEventListener('pointerdown', (e) => {
   handleLoveTap(e.clientX, e.clientY);
 });
@@ -606,28 +634,24 @@ function handleActionClick() {
         soilHole.classList.remove('open');
         currentStep = 1;
         updateUI(currentStep);
-        showWateringCan(); // Muestra la regadera arrastrable
+        showWateringCan(); // Inicia la regadera continua
       }, 1050);
       break;
 
     case 1:
-    case 2:
-      // Si el usuario toca el botón de regar en vez de arrastrar
+      // Si pulsa el botón "Regar" en vez de arrastrar con el dedo
       autoWaterAnimation();
       break;
 
+    case 2:
     case 3:
-    case 4:
-      // Si el usuario toca el botón "Dar amor"
+      // Si pulsa el botón "Dar amor"
       const rect = actionBtn.getBoundingClientRect();
       handleLoveTap(rect.left + rect.width / 2, rect.top);
       break;
 
-    case 5:
-      // TE AMO -> 
-      // 1. La flor SE COMPLETA con sus 48 pétalos dorados
-      // 2. Lluvia y explosión de flores en pantalla
-      // 3. EXACTAMENTE 3 SEGUNDOS después aparece el cartel final
+    case 4:
+      // TE AMO -> Florecimiento completo + explosión de flores + 3 segundos de espera
       actionBtn.disabled = true;
       triggerTapHearts(window.innerWidth / 2, window.innerHeight * 0.45);
       triggerAura();
@@ -854,7 +878,6 @@ function animateAmbient() {
    ============================================================================== */
 function setup3dInteractivity() {
   window.addEventListener('mousemove', (e) => {
-    // Si está arrastrando la regadera, no inclinar para mejor control
     if (isDraggingCan) return;
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
@@ -943,7 +966,6 @@ seed.addEventListener('click', () => {
 
 replayBtn.addEventListener('click', resetAll);
 
-// Iniciar música en la primera interacción
 document.addEventListener('pointerdown', () => {
   ensureMusicOnFirstInteraction();
 }, { once: true });
