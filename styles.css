@@ -15,6 +15,7 @@
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   user-select: none;
 }
 
@@ -27,6 +28,7 @@ html, body {
   background: var(--bg-gradient);
   color: #2c3e50;
   position: relative;
+  touch-action: manipulation;
 }
 
 /* Canvas de fondo y de explosión */
@@ -565,6 +567,195 @@ html, body {
   0% { transform: translateY(0) scale(0.4); opacity: 0; }
   25% { transform: translateY(-30px) scale(1.1); opacity: 1; }
   100% { transform: translateY(-150px) scale(1.3); opacity: 0; }
+}
+
+/* ==========================================================================
+   REGADERA INTERACTIVA ARRASTRABLE
+   ========================================================================== */
+.watering-can {
+  position: fixed;
+  top: 18%;
+  right: 12%;
+  width: 95px;
+  height: 76px;
+  z-index: 85;
+  cursor: grab;
+  touch-action: none; /* Crucial para arrastrar en móviles sin scrollear */
+  user-select: none;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.22));
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s ease;
+  transform-origin: 20px 30px;
+}
+
+.watering-can:active, .watering-can.dragging {
+  cursor: grabbing;
+  transform: scale(1.08);
+}
+
+.watering-can.pouring {
+  transform: rotate(-32deg) scale(1.05);
+}
+
+.watering-can.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.4) translateY(40px);
+}
+
+.can-svg {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.can-hint-tag {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid #48a832;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #246816;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  pointer-events: none;
+  animation: bounceCanTag 1.8s infinite ease-in-out;
+}
+
+@keyframes bounceCanTag {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-5px); }
+}
+
+.watering-can.pouring .can-hint-tag,
+.watering-can.dragging .can-hint-tag {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Gotas que caen de la regadera al verter agua */
+.can-water-drop {
+  position: fixed;
+  width: 4px;
+  height: 14px;
+  background: linear-gradient(180deg, #a6e8ff, #2997ff);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  pointer-events: none;
+  z-index: 80;
+  animation: canDropFall 0.5s linear forwards;
+}
+
+@keyframes canDropFall {
+  0% { opacity: 0.95; transform: scaleY(1); }
+  100% { opacity: 0; transform: translateY(110px) scaleY(1.3); }
+}
+
+/* ==========================================================================
+   ZONA DE TOQUES INTERACTIVOS (DAR AMOR)
+   ========================================================================== */
+.love-tap-zone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 28;
+  cursor: pointer;
+  display: none;
+  touch-action: manipulation;
+}
+
+.love-tap-zone.active {
+  display: block;
+}
+
+/* Corazones que brotan al tocar la pantalla */
+.tap-burst-heart {
+  position: fixed;
+  pointer-events: none;
+  z-index: 95;
+  font-size: 28px;
+  animation: tapBurstAnim 1.2s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+  filter: drop-shadow(0 0 10px rgba(255, 60, 120, 0.6));
+}
+
+@keyframes tapBurstAnim {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% - 60px)) scale(1.3) rotate(var(--rot, 15deg));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% - 130px)) scale(1.5) rotate(calc(var(--rot, 15deg) * 2));
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   INDICADOR DE ACCIÓN INTERACTIVA (REGAR O DAR AMOR)
+   ========================================================================== */
+.action-meter-container {
+  width: 100%;
+  max-width: 280px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  z-index: 20;
+  animation: fadeInMeter 0.3s ease;
+}
+
+.action-meter-container.active {
+  display: flex;
+}
+
+@keyframes fadeInMeter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.action-meter-track {
+  width: 100%;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.action-meter-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 20px;
+  transition: width 0.18s ease-out;
+  background: linear-gradient(90deg, #3aa7ff, #00d2ff);
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+}
+
+.action-meter-container.love-theme .action-meter-fill {
+  background: linear-gradient(90deg, #ff5e7e, #ff2a5f);
+  box-shadow: 0 0 10px rgba(255, 42, 95, 0.5);
+}
+
+.action-meter-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #3b5f75;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.action-meter-container.love-theme .action-meter-label {
+  color: #bd1546;
 }
 
 /* ==========================================================================

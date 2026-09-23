@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Feliz primavera, gordita 🌻</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,7 @@
 
   <div class="sun-glow"></div>
 
-  <!-- Botón flotante para pausar / activar música (solo icono con tachado) -->
+  <!-- Botón flotante para pausar / activar música (icono compacto y tachado) -->
   <button id="music-toggle" class="music-btn" aria-label="Control de música" title="Música: Flores Amarillas">
     <svg class="music-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M9 18V5l11-2v13"></path>
@@ -34,6 +34,39 @@
     <source src="flores-amarillas.mp3" type="audio/mpeg">
   </audio>
 
+  <!-- Regadera interactiva arrastrable -->
+  <div id="watering-can" class="watering-can hidden" title="¡Arrastrame para regar!">
+    <svg viewBox="0 0 100 80" class="can-svg">
+      <defs>
+        <linearGradient id="canGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#80db77" />
+          <stop offset="60%" stop-color="#4aa834" />
+          <stop offset="100%" stop-color="#2a731b" />
+        </linearGradient>
+        <linearGradient id="roseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ffe26a" />
+          <stop offset="100%" stop-color="#f5a623" />
+        </linearGradient>
+      </defs>
+      <!-- Asa trasera -->
+      <path d="M 68 25 C 92 25, 92 65, 68 62" fill="none" stroke="#256917" stroke-width="6" stroke-linecap="round" />
+      <path d="M 68 25 C 92 25, 92 65, 68 62" fill="none" stroke="#5ebb41" stroke-width="3" stroke-linecap="round" />
+      <!-- Pico vertedor hacia la izquierda -->
+      <path d="M 35 48 L 14 26" fill="none" stroke="#337f20" stroke-width="7" stroke-linecap="round" />
+      <!-- Rosa / roseta rociadora -->
+      <ellipse cx="12" cy="24" rx="7" ry="11" transform="rotate(-30 12 24)" fill="url(#roseGrad)" stroke="#c46a09" stroke-width="1.5" />
+      <!-- Cuerpo cilíndrico de la regadera -->
+      <rect x="30" y="24" width="40" height="42" rx="10" fill="url(#canGrad)" stroke="#1f5a13" stroke-width="1.5" />
+      <!-- Asa superior -->
+      <path d="M 38 24 C 38 10, 62 10, 62 24" fill="none" stroke="#48a832" stroke-width="4.5" stroke-linecap="round" />
+      <!-- Detalle corazoncito en el cuerpo -->
+      <path d="M 50 40 C 50 37, 46 35, 44 37 C 42 39, 42 42, 50 48 C 58 42, 58 39, 56 37 C 54 35, 50 37, 50 40 Z" fill="#ffffff" opacity="0.85" />
+    </svg>
+    <!-- Chorritos de agua que salen de la regadera -->
+    <div class="water-stream" id="water-stream"></div>
+    <div class="can-hint-tag">Arrastrame 💧</div>
+  </div>
+
   <main class="app-container">
     <!-- Encabezado simple y sincero -->
     <header class="header">
@@ -45,8 +78,11 @@
       </p>
     </header>
 
-    <!-- Escenario 3D interactivo con la maceta y la planta perfectamente integradas -->
+    <!-- Escenario interactivo con maceta y planta -->
     <div class="scene-wrapper" id="scene-wrapper">
+      <!-- Zona de toques para Dar Amor -->
+      <div class="love-tap-zone" id="love-tap-zone"></div>
+
       <div class="stage-3d" id="stage-3d">
 
         <!-- Destellos y auras -->
@@ -55,13 +91,13 @@
         <div class="heart-container" id="heart-container"></div>
 
         <!-- Semilla flotante (antes de plantar) -->
-        <div class="seed-element" id="seed">
+        <div class="seed-element" id="seed" title="Toca para plantar">
           <div class="seed-body"></div>
           <div class="seed-glow"></div>
         </div>
 
         <!-- Contenedor unificado de Maceta y Planta -->
-        <div class="pot-plant-assembly">
+        <div class="pot-plant-assembly" id="pot-plant-assembly">
 
           <!-- Planta SVG integrada: sale directamente desde el centro de la tierra -->
           <div class="plant-container" id="plant-container">
@@ -151,7 +187,7 @@
                 <path d="M 116 112 C 114 96, 126 96, 124 112 Z" fill="#f5b025" />
               </g>
 
-              <!-- Flor de Girasol -->
+              <!-- Flor de Girasol completa y radiante (48 pétalos en dos capas) -->
               <g id="sunflower-head" class="plant-part sunflower-group">
                 <circle cx="120" cy="100" r="75" fill="rgba(255, 215, 0, 0.22)" filter="url(#glow)" class="bloom-pulse" />
                 <g id="petals-back" class="petals-layer"></g>
@@ -167,7 +203,7 @@
           </div>
 
           <!-- Maceta limpia sin textos -->
-          <div class="pot-3d">
+          <div class="pot-3d" id="pot-3d">
             <div class="pot-rim">
               <div class="pot-soil">
                 <div class="soil-texture"></div>
@@ -186,7 +222,15 @@
       </div>
     </div>
 
-    <!-- Barra de progreso simple -->
+    <!-- Indicador de acción interactiva (agua o amor) -->
+    <div class="action-meter-container" id="action-meter-container">
+      <div class="action-meter-track">
+        <div class="action-meter-fill" id="action-meter-fill"></div>
+      </div>
+      <span class="action-meter-label" id="action-meter-label">💧 Riega la maceta</span>
+    </div>
+
+    <!-- Barra de progreso general -->
     <div class="progress-bar-container">
       <div class="progress-track">
         <div class="progress-bar" id="progress-bar"></div>
