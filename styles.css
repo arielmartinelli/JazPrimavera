@@ -31,8 +31,8 @@ html, body {
   touch-action: manipulation;
 }
 
-/* Canvas de fondo y de explosión */
-#ambient-canvas, #celebration-canvas {
+/* Canvas de fondo, de agua y de explosión */
+#ambient-canvas, #celebration-canvas, #water-canvas {
   position: fixed;
   top: 0;
   left: 0;
@@ -42,6 +42,7 @@ html, body {
 }
 
 #ambient-canvas { z-index: 1; }
+#water-canvas { z-index: 84; }
 #celebration-canvas { z-index: 998; }
 
 /* Reproductor oculto para YouTube */

@@ -10,7 +10,8 @@ let isMusicPlaying = false;
 let isWaterStepActive = false;
 let waterPourProgress = 0;
 let isDraggingCan = false;
-let canWaterInterval = null;
+let isPouringWater = false;
+let autoWaterInterval = null;
 
 let isLoveStepActive = false;
 let loveTaps = 0;
@@ -67,8 +68,10 @@ const replayBtn = document.getElementById('replay-btn');
 // Canvas
 const ambientCanvas = document.getElementById('ambient-canvas');
 const celebrationCanvas = document.getElementById('celebration-canvas');
+const waterCanvas = document.getElementById('water-canvas');
 const ambientCtx = ambientCanvas.getContext('2d');
 const celebrationCtx = celebrationCanvas.getContext('2d');
+const waterCtx = waterCanvas.getContext('2d');
 
 /* ==============================================================================
    PREVENCIÓN DE ZOOM POR DOBLE CLIC / DOBLE TOQUE EN MÓVILES
@@ -274,8 +277,166 @@ function triggerAura() {
 }
 
 /* ==============================================================================
-   MECÁNICA 1: RIEGO CONTINUO CON ABUNDANTE AGUA HASTA LA MACETA
+   MECÁNICA 1: RIEGO CONTINUO EN CANVAS 60 FPS (ALTA FLUIDEZ, CAÍDA SUAVE Y PAUSADA)
    ============================================================================== */
+let waterDrops = [];
+let soilRipples = [];
+
+class WaterDroplet {
+  constructor(spoutX, spoutY) {
+    this.x = spoutX + (Math.random() - 0.5) * 6;
+    this.y = spoutY + (Math.random() - 0.5) * 4;
+    // Inclinación suave hacia la izquierda siguiendo la roseta de la regadera
+    this.vx = -0.9 + (Math.random() - 0.5) * 0.75;
+    // Caída más lenta, suave y flotante (~1.1s a 1.3s de trayecto)
+    this.vy = 0.7 + Math.random() * 0.45;
+    this.gravity = 0.12;
+    this.terminalVy = 4.3;
+    this.size = 2.2 + Math.random() * 1.5;
+    this.alpha = 0.85 + Math.random() * 0.15;
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy = Math.min(this.vy + this.gravity, this.terminalVy);
+    this.vx *= 0.994;
+  }
+
+  draw(ctx) {
+    const speed = Math.hypot(this.vx, this.vy);
+    const angle = Math.atan2(this.vy, this.vx);
+    const length = Math.max(speed * 2.4, 5.5);
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, length, this.size, 0, 0, Math.PI * 2);
+
+    const grad = ctx.createLinearGradient(-length, 0, length, 0);
+    grad.addColorStop(0, `rgba(200, 245, 255, ${this.alpha * 0.45})`);
+    grad.addColorStop(0.4, `rgba(100, 210, 255, ${this.alpha})`);
+    grad.addColorStop(1, `rgba(25, 140, 255, ${this.alpha})`);
+
+    ctx.fillStyle = grad;
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = 'rgba(30, 160, 255, 0.45)';
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+class SoilRipple {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.radiusX = 2;
+    this.radiusY = 1;
+    this.maxRadiusX = 14 + Math.random() * 9;
+    this.alpha = 0.9;
+    this.lineWidth = 1.6;
+    this.dead = false;
+  }
+
+  update() {
+    this.radiusX += (this.maxRadiusX - this.radiusX) * 0.12 + 0.35;
+    this.radiusY = this.radiusX * 0.38; // Perspectiva achatada sobre la elipse de la tierra
+    this.alpha -= 0.038;
+    this.lineWidth = Math.max(0.4, this.lineWidth * 0.96);
+    if (this.alpha <= 0) {
+      this.dead = true;
+    }
+  }
+
+  draw(ctx) {
+    if (this.dead || this.alpha <= 0) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y, this.radiusX, this.radiusY, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(125, 220, 255, ${this.alpha})`;
+    ctx.lineWidth = this.lineWidth;
+    ctx.shadowBlur = 3;
+    ctx.shadowColor = 'rgba(50, 180, 255, 0.4)';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y, this.radiusX * 0.5, this.radiusY * 0.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200, 242, 255, ${this.alpha * 0.25})`;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function updateAndRenderWater() {
+  waterCtx.clearRect(0, 0, waterCanvas.width, waterCanvas.height);
+
+  const canRect = wateringCan.getBoundingClientRect();
+  const potRect = (potSoil || stage3d).getBoundingClientRect();
+
+  // Coordenadas exactas del pico vertedor
+  const spoutX = canRect.left + canRect.width * 0.12;
+  const spoutY = canRect.top + canRect.height * 0.32;
+
+  // Límite superior de la tierra de la maceta
+  const targetSoilY = potRect.top + potRect.height * 0.45;
+  const soilMinX = potRect.left + 5;
+  const soilMaxX = potRect.right - 5;
+
+  // Si está vertiendo agua, generar chorro continuo y denso
+  if (isPouringWater) {
+    for (let i = 0; i < 3; i++) {
+      waterDrops.push(new WaterDroplet(spoutX, spoutY));
+    }
+  }
+
+  // Actualizar y dibujar gotas
+  for (let i = waterDrops.length - 1; i >= 0; i--) {
+    const drop = waterDrops[i];
+    drop.update();
+
+    // Llegada a la tierra de la maceta
+    if (drop.y >= targetSoilY) {
+      if (drop.x >= soilMinX && drop.x <= soilMaxX) {
+        soilRipples.push(new SoilRipple(drop.x, targetSoilY));
+
+        // Acumular progreso si estamos en el paso de regar (doble de agua: ~11.5 segundos en total)
+        if (isWaterStepActive && waterPourProgress < 100) {
+          waterPourProgress += 0.048; // A 60 FPS * 3 gotas/frame = ~11.5 segundos constantes
+          updateContinuousGrowth(waterPourProgress);
+
+          if (waterPourProgress >= 100) {
+            completeContinuousWatering();
+          }
+        }
+      }
+      waterDrops.splice(i, 1);
+      continue;
+    }
+
+    // Salida por debajo de la pantalla
+    if (drop.y > window.innerHeight + 30) {
+      waterDrops.splice(i, 1);
+      continue;
+    }
+
+    drop.draw(waterCtx);
+  }
+
+  // Actualizar y dibujar ondas en la tierra
+  for (let i = soilRipples.length - 1; i >= 0; i--) {
+    const ripple = soilRipples[i];
+    ripple.update();
+    if (ripple.dead) {
+      soilRipples.splice(i, 1);
+    } else {
+      ripple.draw(waterCtx);
+    }
+  }
+
+  requestAnimationFrame(updateAndRenderWater);
+}
+
 function setupWateringCan() {
   let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
 
@@ -283,6 +444,7 @@ function setupWateringCan() {
     if (!isWaterStepActive) return;
     ensureMusicOnFirstInteraction();
     isDraggingCan = true;
+    isPouringWater = true;
     wateringCan.classList.add('dragging', 'pouring');
 
     const clientX = e.clientX || (e.touches && e.touches[0].clientX);
@@ -293,8 +455,6 @@ function setupWateringCan() {
     startY = clientY;
     initialLeft = rect.left;
     initialTop = rect.top;
-
-    startCanDroplets();
 
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
@@ -322,15 +482,13 @@ function setupWateringCan() {
     wateringCan.style.left = `${initialLeft + deltaX}px`;
     wateringCan.style.top = `${initialTop + deltaY}px`;
     wateringCan.style.right = 'auto';
-
-    checkWateringCollision();
   }
 
   function onPointerUp() {
     if (!isDraggingCan) return;
     isDraggingCan = false;
+    isPouringWater = false;
     wateringCan.classList.remove('dragging', 'pouring');
-    stopCanDroplets();
 
     window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
@@ -341,99 +499,17 @@ function setupWateringCan() {
   wateringCan.addEventListener('pointerdown', onPointerDown);
 }
 
-function startCanDroplets() {
-  if (canWaterInterval) clearInterval(canWaterInterval);
-  // Emisión rápida para abundante flujo de agua
-  canWaterInterval = setInterval(() => {
-    emitAbundantWaterStream();
-    checkWateringCollision();
-  }, 50);
-}
-
-function stopCanDroplets() {
-  if (canWaterInterval) {
-    clearInterval(canWaterInterval);
-    canWaterInterval = null;
-  }
-}
-
-// Chorro abundante de gotas que caen desde la regadera HASTA la tierra de la maceta
-function emitAbundantWaterStream() {
-  const canRect = wateringCan.getBoundingClientRect();
-  const potRect = (potSoil || stage3d).getBoundingClientRect();
-
-  // Coordenadas del pico vertedor
-  const spoutX = canRect.left + canRect.width * 0.12;
-  const spoutY = canRect.top + canRect.height * 0.32;
-
-  // Nivel superior de la tierra de la maceta
-  const targetSoilY = potRect.top + potRect.height * 0.45;
-  const distanceY = Math.max(90, targetSoilY - spoutY);
-
-  // Emitir 4 gotas por tick para lograr un chorro de agua abundante y denso
-  for (let i = 0; i < 4; i++) {
-    const drop = document.createElement('div');
-    drop.className = 'can-water-drop';
-
-    const startX = spoutX + (Math.random() - 0.5) * 8;
-    const startY = spoutY + (Math.random() - 0.5) * 4;
-    const spreadX = (Math.random() - 0.5) * 28 - 12; // Inclinación natural
-    const fallDuration = 0.65 + Math.random() * 0.18; // Caída más suave y lenta (~0.7s a 0.8s)
-
-    drop.style.left = `${startX}px`;
-    drop.style.top = `${startY}px`;
-    drop.style.setProperty('--fall-dist', `${distanceY}px`);
-    drop.style.setProperty('--spread-x', `${spreadX}px`);
-    drop.style.animationDuration = `${fallDuration}s`;
-
-    document.body.appendChild(drop);
-
-    // Cuando la gota llega a la tierra de la maceta, produce una onda de salpicadura
-    setTimeout(() => {
-      const impactX = startX + spreadX;
-      if (impactX >= potRect.left - 25 && impactX <= potRect.right + 25) {
-        createSoilRipple(impactX, targetSoilY);
-      }
-      drop.remove();
-    }, fallDuration * 1000);
-  }
-}
-
-function createSoilRipple(x, y) {
-  const ripple = document.createElement('div');
-  ripple.className = 'soil-splash-ripple';
-  ripple.style.left = `${x}px`;
-  ripple.style.top = `${y}px`;
-  document.body.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 400);
-}
-
-// Comprobación y CRECIMIENTO CONTINUO en tiempo real mientras cae el agua (~5.5 segundos)
-function checkWateringCollision() {
-  if (!isWaterStepActive) return;
-
-  const canRect = wateringCan.getBoundingClientRect();
-  const potRect = (potSoil || stage3d).getBoundingClientRect();
-  const spoutX = canRect.left + canRect.width * 0.15;
-
-  // Si el chorro cae en el área de la maceta
-  const isOverPot = (spoutX >= potRect.left - 45 && spoutX <= potRect.right + 45);
-
-  if (isOverPot) {
-    waterPourProgress += 0.88; // ~5.5 a 6 segundos continuos para regar por completo
-    updateContinuousGrowth(waterPourProgress);
-
-    if (waterPourProgress >= 100) {
-      completeContinuousWatering();
-    }
-  }
-}
-
 // Crecimiento progresivo y continuo de la plantita mientras cae el agua
 function updateContinuousGrowth(progress) {
   const pct = Math.min(100, Math.round(progress));
   actionMeterFill.style.width = `${pct}%`;
   actionMeterLabel.textContent = `💧 Regando... ${pct}%`;
+
+  // Brillo húmedo orgánico sobre la tierra
+  if (potSoil) {
+    const wetFactor = Math.min(0.28, (pct / 100) * 0.28);
+    potSoil.style.filter = `brightness(${1 - wetFactor * 0.6}) saturate(${1 + wetFactor * 1.8})`;
+  }
 
   // 1. A partir del 15% de agua: asoma el primer tallito verde
   if (pct >= 15 && !stem1.classList.contains('visible')) {
@@ -458,6 +534,12 @@ function updateContinuousGrowth(progress) {
   if (pct >= 75 && !leaf3.classList.contains('visible')) {
     leaf3.classList.add('visible');
     leaf4.classList.add('visible');
+    subTitle.textContent = '¡Casi lista, qué hermosa está creciendo! 🌱';
+  }
+
+  // 5. A partir del 90% de agua: asoma la parte superior
+  if (pct >= 90 && !stem3.classList.contains('visible')) {
+    stem3.classList.add('visible');
   }
 
   // Barra de progreso general también avanza suavemente
@@ -468,23 +550,29 @@ function updateContinuousGrowth(progress) {
 function showWateringCan() {
   isWaterStepActive = true;
   waterPourProgress = 0;
+  isPouringWater = false;
+  wateringCan.style.transition = '';
 
   wateringCan.classList.remove('hidden');
-  wateringCan.style.top = `${window.innerHeight * 0.28}px`;
+  wateringCan.style.top = `${window.innerHeight * 0.26}px`;
   wateringCan.style.left = `${window.innerWidth * 0.60}px`;
   wateringCan.style.right = 'auto';
 
   actionMeterContainer.classList.remove('love-theme');
   actionMeterContainer.classList.add('active');
   actionMeterFill.style.width = '0%';
-  actionMeterLabel.textContent = '💧 Arrastra la regadera a la plantita';
+  actionMeterLabel.textContent = '💧 Arrastra la regadera a la maceta';
 
   actionBtn.disabled = false;
 }
 
 function hideWateringCan() {
   isWaterStepActive = false;
-  stopCanDroplets();
+  isPouringWater = false;
+  if (autoWaterInterval) {
+    clearInterval(autoWaterInterval);
+    autoWaterInterval = null;
+  }
   wateringCan.classList.add('hidden');
   actionMeterContainer.classList.remove('active');
 }
@@ -492,7 +580,11 @@ function hideWateringCan() {
 // Al completar el 100% de agua: transición suave a la etapa de dar amor
 function completeContinuousWatering() {
   isWaterStepActive = false;
-  stopCanDroplets();
+  isPouringWater = false;
+  if (autoWaterInterval) {
+    clearInterval(autoWaterInterval);
+    autoWaterInterval = null;
+  }
   wateringCan.classList.remove('pouring');
 
   triggerAura();
@@ -502,37 +594,42 @@ function completeContinuousWatering() {
     currentStep = 2; // Avanza a "Dar amor"
     updateUI(currentStep);
     setupLoveStep(); // Prepara los toques de amor
-  }, 600);
+  }, 850);
 }
 
-// Si se presiona el botón "Regar", se ejecuta animación de riego continuo hasta completar
+// Si se presiona el botón "Regar", se posiciona la regadera y vierte de forma continua (~11.5s)
 function autoWaterAnimation() {
   if (!isWaterStepActive) return;
   actionBtn.disabled = true;
 
-  const potRect = stage3d.getBoundingClientRect();
-  const targetX = potRect.left + potRect.width * 0.40;
-  const targetY = potRect.top + potRect.height * 0.12;
+  const potRect = (potSoil || stage3d).getBoundingClientRect();
+  const targetX = potRect.left + potRect.width * 0.36;
+  const targetY = potRect.top - 60;
 
-  wateringCan.style.transition = 'left 0.7s ease, top 0.7s ease, transform 0.3s ease';
+  wateringCan.style.transition = 'left 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.3s ease';
   wateringCan.style.left = `${targetX}px`;
   wateringCan.style.top = `${targetY}px`;
 
   setTimeout(() => {
     wateringCan.classList.add('pouring');
-    startCanDroplets();
+    isPouringWater = true;
 
-    const autoInterval = setInterval(() => {
-      waterPourProgress += 1.05; // Riego automático pausado y suave de ~5.5 segundos
-      updateContinuousGrowth(waterPourProgress);
-
-      if (waterPourProgress >= 100) {
-        clearInterval(autoInterval);
-        wateringCan.classList.remove('pouring');
-        completeContinuousWatering();
+    // Respaldo continuo suave para asegurar exactamente ~11.5s
+    if (autoWaterInterval) clearInterval(autoWaterInterval);
+    autoWaterInterval = setInterval(() => {
+      if (!isWaterStepActive) {
+        clearInterval(autoWaterInterval);
+        return;
+      }
+      if (waterDrops.length === 0 && waterPourProgress < 100) {
+        waterPourProgress += 0.52;
+        updateContinuousGrowth(waterPourProgress);
+        if (waterPourProgress >= 100) {
+          completeContinuousWatering();
+        }
       }
     }, 60);
-  }, 750);
+  }, 850);
 }
 
 /* ==============================================================================
@@ -930,6 +1027,12 @@ function resetAll() {
 
   seed.classList.remove('planting', 'hidden');
   soilHole.classList.remove('open');
+  if (potSoil) potSoil.style.filter = '';
+
+  waterDrops = [];
+  soilRipples = [];
+  isPouringWater = false;
+  waterPourProgress = 0;
 
   hideWateringCan();
   isLoveStepActive = false;
@@ -949,6 +1052,8 @@ function handleResize() {
   ambientCanvas.height = window.innerHeight;
   celebrationCanvas.width = window.innerWidth;
   celebrationCanvas.height = window.innerHeight;
+  waterCanvas.width = window.innerWidth;
+  waterCanvas.height = window.innerHeight;
   initAmbientSystem();
 }
 
@@ -976,5 +1081,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setup3dInteractivity();
   setupWateringCan();
   animateAmbient();
+  updateAndRenderWater();
   updateUI(0);
 });
